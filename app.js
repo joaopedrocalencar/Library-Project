@@ -21,6 +21,12 @@ app.use(express.static("public"));
 app.engine("hbs", exphbs.engine({ extname: ".hbs", defaultLayout: "main" }));
 app.set("view engine", "hbs");
 
+function checkUser(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect("/signin");
+  }
+  next();
+};
 
 app.get("/", (req, res) => {
   res.render("landing");
@@ -45,11 +51,7 @@ app.post("/signin", (req, res) => {
   res.redirect("/home");
 });
 
-app.get("/home", (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/signin");
-  }
-
+app.get("/home", checkUser, (req, res) => {
   res.render("home", {
     user: req.session.user,
     books: [
