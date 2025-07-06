@@ -2,9 +2,18 @@ const express = require("express");
 const exphbs = require("express-handlebars");
 const fs = require("fs");
 const path = require("path");
+const session = require('express-session');
+
 
 const app = express();
 const HTTP_PORT = process.env.PORT || 3000;
+
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 180000 }, //3 minutes
+}))
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -12,7 +21,6 @@ app.use(express.static("public"));
 app.engine("hbs", exphbs.engine({ extname: ".hbs", defaultLayout: "main" }));
 app.set("view engine", "hbs");
 
-let currentUser = null;
 
 app.get("/", (req, res) => {
   res.render("landing");
@@ -33,15 +41,17 @@ app.post("/signin", (req, res) => {
     return res.render("signin", { error: "Invalid password" });
   }
 
-  currentUser = username;
+  req.session.user = username;
   res.redirect("/home");
 });
 
 app.get("/home", (req, res) => {
-  if (!currentUser) return res.redirect("/signin");
+  if (!req.session.user) {
+    return res.redirect("/signin");
+  }
 
   res.render("home", {
-    user: currentUser,
+    user: req.session.user,
     books: [
       "The Hobbit",
       "Don Quixote",
@@ -60,8 +70,9 @@ app.get("/home", (req, res) => {
 });
 
 app.get("/signout", (req, res) => {
-  currentUser = null;
-  res.redirect("/");
+  req.session.destroy(() => {
+    res.redirect("/");
+  })
 });
 
 app.listen(HTTP_PORT, () => {
