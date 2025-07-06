@@ -18,7 +18,12 @@ app.use(session({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-app.engine("hbs", exphbs.engine({ extname: ".hbs", defaultLayout: "main" }));
+app.engine("hbs", exphbs.engine({
+  extname: ".hbs",
+  defaultLayout: "main",
+  partialsDir: path.join(__dirname, "views", "partials")
+}));
+
 app.set("view engine", "hbs");
 
 function checkUser(req, res, next) {
