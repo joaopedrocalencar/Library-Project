@@ -62,26 +62,19 @@ app.post("/signin", (req, res) => {
 
 app.get("/home", checkUser, (req, res) => {
   const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
-
+  const booksAvailable = books.filter(book => book.available);
+  const borrowedBooks = books.filter(book => !book.available && req.session.borrowedBooks.includes(book.title)
+  );
 
   res.render("home", {
     user: req.session.user,
-    books: [
-      "The Hobbit",
-      "Don Quixote",
-      "The Little Prince",
-      "The Great Gatsby",
-      "To Kill a Mockingbird",
-      "The Lord of the Rings",
-      "One Hundred Years of Solitude",
-      "The Catcher in the Rye",
-      "Pride and Prejudice",
-      "The Alchemist",
-      "The Lord of The Flies",
-      "A Tale of Two Cities",
-    ],
+    availableBooks: booksAvailable.map(book => book.title),
+    borrowedBooks: borrowedBooks.map(book => book.title)
   });
+
 });
+
+
 
 app.post("/borrow", checkUser, (req, res) => {
   const selectedBooks = req.body.books;
@@ -112,6 +105,7 @@ app.post("/borrow", checkUser, (req, res) => {
 
   res.redirect("/home");
 });
+
 
 
 app.get("/signout", (req, res) => {
