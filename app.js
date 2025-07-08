@@ -3,13 +3,16 @@ const exphbs = require("express-handlebars");
 const fs = require("fs");
 const path = require("path");
 const session = require('express-session');
+const randomstring = require("randomstring");
 
 
 const app = express();
 const HTTP_PORT = process.env.PORT || 3000;
 
+
+
 app.use(session({
-  secret: 'keyboard cat',
+  secret: randomstring.generate(),
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 180000 }, //3 minutes
@@ -53,10 +56,14 @@ app.post("/signin", (req, res) => {
   }
 
   req.session.user = username;
+  req.session.borrowedBooks = [];
   res.redirect("/home");
 });
 
 app.get("/home", checkUser, (req, res) => {
+  const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
+
+
   res.render("home", {
     user: req.session.user,
     books: [
@@ -75,6 +82,37 @@ app.get("/home", checkUser, (req, res) => {
     ],
   });
 });
+
+app.post("/borrow", checkUser, (req, res) => {
+  const selectedBooks = req.body.books;
+  if (!selectedBooks) return res.redirect("/home");
+
+  const booksData = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
+
+  const updatedBooks = booksData.map(book => {
+    const isSelected = Array.isArray(selectedBooks)
+      ? selectedBooks.includes(book.title)
+      : selectedBooks === book.title;
+
+    if (isSelected) {
+      book.available = false;
+
+      if (!req.session.borrowedBooks.includes(book.title)) {
+        req.session.borrowedBooks.push(book.title);
+      }
+    }
+
+    return book;
+  });
+
+  fs.writeFileSync(
+    path.join(__dirname, "books.json"),
+    JSON.stringify(updatedBooks, null, 2)
+  );
+
+  res.redirect("/home");
+});
+
 
 app.get("/signout", (req, res) => {
   req.session.destroy(() => {

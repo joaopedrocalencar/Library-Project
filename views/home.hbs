@@ -8,16 +8,11 @@
   <div class="books-container">
     <h3>Books available today:</h3>
     <form>
-      {{#each books}}
-        <label>
-          <input
-            class="checkbox"
-            type="checkbox"
-            name="books"
-            value="{{this}}"
-          />
-          {{this}}
-        </label><br />
+      {{#each availableBooks}}
+      <label>
+        <input class="checkbox" type="checkbox" name="books" value="{{this}}" />
+        {{this}}
+      </label><br />
       {{/each}}
       <button type="submit">Borrow</button>
     </form>
