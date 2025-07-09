@@ -7,7 +7,7 @@
 <div class="home-container">
   <div class="books-container">
     <h3>Books available today:</h3>
-    <form>
+    <form method="POST" action="/borrow">
       {{#each availableBooks}}
       <label>
         <input class="checkbox" type="checkbox" name="books" value="{{this}}" />
@@ -15,6 +15,19 @@
       </label><br />
       {{/each}}
       <button type="submit">Borrow</button>
+    </form>
+  </div>
+
+  <div class="return-books">
+    <h3>Your borrowed books:</h3>
+    <form method="POST" action="/return">
+      {{#each borrowedBooks}}
+      <label>
+        <input class="checkbox" type="checkbox" name="books" value="{{this}}" />
+        {{this}}
+      </label><br />
+      {{/each}}
+      <button type="submit">Return</button>
     </form>
   </div>
 

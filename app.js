@@ -31,10 +31,15 @@ app.set("view engine", "hbs");
 
 function checkUser(req, res, next) {
   if (!req.session.user) {
-    return res.redirect("/signin");
+    if (req.session.wasLoggedIn) {
+      return res.redirect("/signin?expired=true");
+    } else {
+      return res.redirect("/");
+    }
   }
   next();
-};
+}
+
 
 app.get("/", (req, res) => {
   res.render("landing");
@@ -57,6 +62,7 @@ app.post("/signin", (req, res) => {
 
   req.session.user = username;
   req.session.borrowedBooks = [];
+  req.session.wasLoggedIn = true;
   res.redirect("/home");
 });
 
@@ -74,25 +80,35 @@ app.get("/home", checkUser, (req, res) => {
 
 });
 
-
-
 app.post("/borrow", checkUser, (req, res) => {
   const selectedBooks = req.body.books;
-  if (!selectedBooks) return res.redirect("/home");
 
-  const booksData = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
+  if (!selectedBooks) {
+    return res.redirect("/home");
+  }
 
-  const updatedBooks = booksData.map(book => {
-    const isSelected = Array.isArray(selectedBooks)
-      ? selectedBooks.includes(book.title)
-      : selectedBooks === book.title;
+  const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
 
-    if (isSelected) {
-      book.available = false;
+  if (!req.session.borrowedBooks) {
+    req.session.borrowedBooks = [];
+  }
 
-      if (!req.session.borrowedBooks.includes(book.title)) {
-        req.session.borrowedBooks.push(book.title);
+  const updatedBooks = books.map((book) => {
+    let isSelected = false;
+
+    if (Array.isArray(selectedBooks)) {
+      if (selectedBooks.includes(book.title)) {
+        isSelected = true;
       }
+    } else {
+      if (selectedBooks === book.title) {
+        isSelected = true;
+      }
+    }
+
+    if (isSelected && !req.session.borrowedBooks.includes(book.title)) {
+      book.available = false;
+      req.session.borrowedBooks.push(book.title);
     }
 
     return book;
@@ -106,6 +122,50 @@ app.post("/borrow", checkUser, (req, res) => {
   res.redirect("/home");
 });
 
+
+app.post("/return", checkUser, (req, res) => {
+  const selectedBooks = req.body.books;
+
+  if (!selectedBooks) {
+    return res.redirect("/home");
+  }
+
+  const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
+
+  if (!req.session.borrowedBooks) {
+    req.session.borrowedBooks = [];
+  }
+
+  const updatedBooks = books.map((book) => {
+    let isSelected = false;
+
+    if (Array.isArray(selectedBooks)) {
+      if (selectedBooks.includes(book.title)) {
+        isSelected = true;
+      }
+    } else {
+      if (selectedBooks === book.title) {
+        isSelected = true;
+      }
+    }
+
+    if (isSelected) {
+      book.available = true;
+      req.session.borrowedBooks = req.session.borrowedBooks.filter(
+        (title) => title !== book.title
+      );
+    }
+
+    return book;
+  });
+
+  fs.writeFileSync(
+    path.join(__dirname, "books.json"),
+    JSON.stringify(updatedBooks, null, 2)
+  );
+
+  res.redirect("/home");
+});
 
 
 app.get("/signout", (req, res) => {
