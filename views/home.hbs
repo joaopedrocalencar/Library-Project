@@ -5,34 +5,55 @@
 </div>
 
 <div class="home-container">
-  <div class="books-container">
-    <h3>Books available today:</h3>
-    <form method="POST" action="/borrow">
-      {{#each availableBooks}}
-      <label>
-        <input class="checkbox" type="checkbox" name="books" value="{{this}}" />
-        {{this}}
-      </label><br />
-      {{/each}}
-      <button type="submit">Borrow</button>
-    </form>
-  </div>
+  <div class="main-books-container">
+    <div class="books-container">
+      <h3>Books available today:</h3>
+      <form method="POST" action="/borrow">
+        {{#each availableBooks}}
+        <label>
+          <input class="borrow-checkbox" type="checkbox" name="books" value="{{this}}" />
+          {{this}}
+        </label><br />
+        {{/each}}
+        <button id="borrow-button" type="submit" disabled>Borrow</button>
+      </form>
+    </div>
 
-  <div class="return-books">
-    <h3>Your borrowed books:</h3>
-    <form method="POST" action="/return">
-      {{#each borrowedBooks}}
-      <label>
-        <input class="checkbox" type="checkbox" name="books" value="{{this}}" />
-        {{this}}
-      </label><br />
-      {{/each}}
-      <button type="submit">Return</button>
-    </form>
-  </div>
+    <div class="books-container">
+      <h3>Your borrowed books:</h3>
+      <form method="POST" action="/return">
+        {{#each borrowedBooks}}
+        <label>
+          <input class="return-checkbox" type="checkbox" name="books" value="{{this}}" />
+          {{this}}
+        </label><br />
+        {{/each}}
+        <button id="return-button" type="submit" disabled>Return</button>
+      </form>
+    </div>
+    <div class="user-info">
+      <p>Username: <strong> {{user}}</strong></p>
+    </div>
 
-  <div class="user-info">
-    <p>Username: <strong> {{user}}</strong></p>
   </div>
-
 </div>
+<script>
+  const borrowCheckboxes = document.querySelectorAll('.borrow-checkbox');
+  const returnCheckboxes = document.querySelectorAll('.return-checkbox');
+  const borrowButton = document.getElementById('borrow-button');
+  const returnButton = document.getElementById('return-button');
+
+  function updateBorrowButton() {
+    borrowButton.disabled = !Array.from(borrowCheckboxes).some(cb => cb.checked);
+  }
+
+  function updateReturnButton() {
+    returnButton.disabled = !Array.from(returnCheckboxes).some(cb => cb.checked);
+  }
+
+  borrowCheckboxes.forEach(cb => cb.addEventListener('change', updateBorrowButton));
+  returnCheckboxes.forEach(cb => cb.addEventListener('change', updateReturnButton));
+
+  updateBorrowButton();
+  updateReturnButton();
+</script>

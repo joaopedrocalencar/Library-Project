@@ -1,8 +1,26 @@
 {
-"george.tsang@senecacollege.ca": "web322n1a",
-"john@beatles.uk": "lennonj!",
-"paul@beatles.uk": "mccartney",
-"george@beatles.uk": "harrison",
-"ringo@beatles.uk": "starrr!!",
-"mick@rollingstones.uk": "jaggerm!"
+  "george.tsang@senecacollege.ca": {
+    "password": "web322n1a",
+    "borrowedBooks": []
+  },
+  "john@beatles.uk": {
+    "password": "lennonj!",
+    "borrowedBooks": []
+  },
+  "paul@beatles.uk": {
+    "password": "mccartney",
+    "borrowedBooks": []
+  },
+  "george@beatles.uk": {
+    "password": "harrison",
+    "borrowedBooks": []
+  },
+  "ringo@beatles.uk": {
+    "password": "starrr!!",
+    "borrowedBooks": []
+  },
+  "mick@rollingstones.uk": {
+    "password": "jaggerm!",
+    "borrowedBooks": []
+  }
 }

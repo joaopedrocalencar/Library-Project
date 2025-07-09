@@ -51,18 +51,21 @@ app.get("/signin", (req, res) => {
 
 app.post("/signin", (req, res) => {
   const { username, password } = req.body;
-  const users = JSON.parse(fs.readFileSync(path.join(__dirname, "users.json")));
+  const usersPath = path.join(__dirname, "users.json");
+  const users = JSON.parse(fs.readFileSync(usersPath));
+
   if (!users[username]) {
     return res.render("signin", { error: "Not a registered username" });
   }
 
-  if (users[username] !== password) {
+  if (users[username].password !== password) {
     return res.render("signin", { error: "Invalid password" });
   }
 
   req.session.user = username;
-  req.session.borrowedBooks = [];
   req.session.wasLoggedIn = true;
+  req.session.borrowedBooks = users[username].borrowedBooks || [];
+
   res.redirect("/home");
 });
 
@@ -82,42 +85,35 @@ app.get("/home", checkUser, (req, res) => {
 
 app.post("/borrow", checkUser, (req, res) => {
   const selectedBooks = req.body.books;
+  if (!selectedBooks) return res.redirect("/home");
 
-  if (!selectedBooks) {
-    return res.redirect("/home");
+  const booksPath = path.join(__dirname, "books.json");
+  const usersPath = path.join(__dirname, "users.json");
+
+  const books = JSON.parse(fs.readFileSync(booksPath));
+  const users = JSON.parse(fs.readFileSync(usersPath));
+  const username = req.session.user;
+
+  const selected = Array.isArray(selectedBooks) ? selectedBooks : [selectedBooks];
+
+  // Ensure user has a borrowedBooks array
+  if (!Array.isArray(users[username].borrowedBooks)) {
+    users[username].borrowedBooks = [];
   }
 
-  const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
-
-  if (!req.session.borrowedBooks) {
-    req.session.borrowedBooks = [];
-  }
-
-  const updatedBooks = books.map((book) => {
-    let isSelected = false;
-
-    if (Array.isArray(selectedBooks)) {
-      if (selectedBooks.includes(book.title)) {
-        isSelected = true;
-      }
-    } else {
-      if (selectedBooks === book.title) {
-        isSelected = true;
-      }
-    }
-
-    if (isSelected && !req.session.borrowedBooks.includes(book.title)) {
+  const updatedBooks = books.map(book => {
+    if (selected.includes(book.title) && book.available) {
       book.available = false;
-      req.session.borrowedBooks.push(book.title);
+      if (!users[username].borrowedBooks.includes(book.title)) {
+        users[username].borrowedBooks.push(book.title);
+      }
     }
-
     return book;
   });
 
-  fs.writeFileSync(
-    path.join(__dirname, "books.json"),
-    JSON.stringify(updatedBooks, null, 2)
-  );
+  req.session.borrowedBooks = users[username].borrowedBooks;
+  fs.writeFileSync(booksPath, JSON.stringify(updatedBooks, null, 2));
+  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
   res.redirect("/home");
 });
@@ -125,47 +121,39 @@ app.post("/borrow", checkUser, (req, res) => {
 
 app.post("/return", checkUser, (req, res) => {
   const selectedBooks = req.body.books;
+  if (!selectedBooks) return res.redirect("/home");
 
-  if (!selectedBooks) {
-    return res.redirect("/home");
+  const booksPath = path.join(__dirname, "books.json");
+  const usersPath = path.join(__dirname, "users.json");
+
+  const books = JSON.parse(fs.readFileSync(booksPath));
+  const users = JSON.parse(fs.readFileSync(usersPath));
+  const username = req.session.user;
+
+  const selected = Array.isArray(selectedBooks) ? selectedBooks : [selectedBooks];
+
+  if (!Array.isArray(users[username].borrowedBooks)) {
+    users[username].borrowedBooks = [];
   }
 
-  const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
-
-  if (!req.session.borrowedBooks) {
-    req.session.borrowedBooks = [];
-  }
-
-  const updatedBooks = books.map((book) => {
-    let isSelected = false;
-
-    if (Array.isArray(selectedBooks)) {
-      if (selectedBooks.includes(book.title)) {
-        isSelected = true;
-      }
-    } else {
-      if (selectedBooks === book.title) {
-        isSelected = true;
-      }
-    }
-
-    if (isSelected) {
+  const updatedBooks = books.map(book => {
+    if (selected.includes(book.title)) {
       book.available = true;
-      req.session.borrowedBooks = req.session.borrowedBooks.filter(
-        (title) => title !== book.title
+      users[username].borrowedBooks = users[username].borrowedBooks.filter(
+        title => title !== book.title
       );
     }
-
     return book;
   });
 
-  fs.writeFileSync(
-    path.join(__dirname, "books.json"),
-    JSON.stringify(updatedBooks, null, 2)
-  );
+  req.session.borrowedBooks = users[username].borrowedBooks;
+  fs.writeFileSync(booksPath, JSON.stringify(updatedBooks, null, 2));
+  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
   res.redirect("/home");
 });
+
+
 
 
 app.get("/signout", (req, res) => {
