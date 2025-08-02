@@ -69,11 +69,18 @@ app.post("/signin", (req, res) => {
   res.redirect("/home");
 });
 
+//mongodb books and users testing
 app.get('/books', async (req, res) => {
   const db = await connectDB();
   const books = await db.collection('books').find().toArray();
-  res.json(books); // just for testing
+  res.json(books);
 });
+app.get('/users', async (req, res) => {
+  const db = await connectDB();
+  const users = await db.collection('users').find().toArray();
+  res.json(users);
+})
+
 
 app.get("/home", checkUser, (req, res) => {
   const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
