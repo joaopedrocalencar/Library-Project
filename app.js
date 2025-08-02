@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const session = require('express-session');
 const randomstring = require("randomstring");
-
+const connectDB = require('./db');
 
 const app = express();
 const HTTP_PORT = process.env.PORT || 3000;
@@ -67,6 +67,12 @@ app.post("/signin", (req, res) => {
   req.session.borrowedBooks = users[username].borrowedBooks || [];
 
   res.redirect("/home");
+});
+
+app.get('/books', async (req, res) => {
+  const db = await connectDB();
+  const books = await db.collection('books').find().toArray();
+  res.json(books); // just for testing
 });
 
 app.get("/home", checkUser, (req, res) => {
