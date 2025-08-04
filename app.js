@@ -5,17 +5,37 @@ const path = require("path");
 const session = require('express-session');
 const randomstring = require("randomstring");
 const connectDB = require('./db');
+const RedisStore = require("connect-redis").default;
+const Redis = require("ioredis");
 
-const app = express();
+
+
+require('dotenv').config();
 const HTTP_PORT = process.env.PORT || 3000;
 
+const app = express();
 
+const sessionSecret = process.env.SESSION_SECRET || (() => {
+  randomstring.generate();
+  console.log("Couldn't connect to redis, using randomstring generator for session secret");
+})();
+
+redisClient = new Redis(process.env.REDIS_URL);
+const redisStore = new RedisStore({
+  client: redisClient,
+  prefix: "redisLibrary",
+});
 
 app.use(session({
-  secret: randomstring.generate(),
+  store: redisStore,
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 180000 }, //3 minutes
+  cookie: {
+    maxAge: 180000, //3 minutes
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production"
+  }
 }))
 
 app.use(express.urlencoded({ extended: true }));
@@ -80,7 +100,6 @@ app.get('/users', async (req, res) => {
   const users = await db.collection('users').find().toArray();
   res.json(users);
 })
-
 
 app.get("/home", checkUser, (req, res) => {
   const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));

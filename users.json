@@ -1,26 +1,20 @@
 {
   "george.tsang@senecacollege.ca": {
-    "password": "web322n1a",
-    "borrowedBooks": []
+    "password": "web322n1a"
   },
   "john@beatles.uk": {
-    "password": "lennonj!",
-    "borrowedBooks": []
+    "password": "lennonj!"
   },
   "paul@beatles.uk": {
-    "password": "mccartney",
-    "borrowedBooks": []
+    "password": "mccartney"
   },
   "george@beatles.uk": {
-    "password": "harrison",
-    "borrowedBooks": []
+    "password": "harrison"
   },
   "ringo@beatles.uk": {
-    "password": "starrr!!",
-    "borrowedBooks": []
+    "password": "starrr!!"
   },
   "mick@rollingstones.uk": {
-    "password": "jaggerm!",
-    "borrowedBooks": []
+    "password": "jaggerm!"
   }
 }
