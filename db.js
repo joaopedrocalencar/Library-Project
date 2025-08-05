@@ -6,7 +6,7 @@ const client = new MongoClient(process.env.MONGO_URI);
 
 let db;
 
-async function connectDB() {  //asynchronous method to connect to mongodb
+async function connectDB() {
     if (!db) {
         try {
             await client.connect();
