@@ -69,8 +69,9 @@ app.get("/signin", (req, res) => {
   res.render("signin", { error: "" });
 });
 
-app.post("/signin", (req, res) => {
+app.post("/signin", async (req, res) => {
   const { username, password } = req.body;
+
   const usersPath = path.join(__dirname, "users.json");
   const users = JSON.parse(fs.readFileSync(usersPath));
 
@@ -82,9 +83,15 @@ app.post("/signin", (req, res) => {
     return res.render("signin", { error: "Invalid password" });
   }
 
+  const db = await connectDB();
+  const client = await db.collection("clients").findOne({ username });
+
+  if (!client) {
+    return res.render("signin", { error: "Email not found in database" })
+  }
+
   req.session.user = username;
   req.session.wasLoggedIn = true;
-  req.session.borrowedBooks = users[username].borrowedBooks || [];
 
   res.redirect("/home");
 });
