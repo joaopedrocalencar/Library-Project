@@ -10,7 +10,6 @@ const Redis = require("ioredis");
 const borrowReturnRoutes = require("./borrowReturn")
 
 
-
 require('dotenv').config();
 const HTTP_PORT = process.env.PORT || 3000;
 
@@ -64,7 +63,6 @@ function checkUser(req, res, next) {
   next();
 }
 
-
 app.get("/", (req, res) => {
   res.render("landing");
 });
@@ -100,23 +98,19 @@ app.post("/signin", async (req, res) => {
   res.redirect("/home");
 });
 
-//mongodb books and users testing
-app.get('/books', async (req, res) => {
-  const db = await connectDB();
-  const books = await db.collection('books').find().toArray();
-  res.json(books);
-});
-app.get('/users', async (req, res) => {
-  const db = await connectDB();
-  const users = await db.collection('users').find().toArray();
-  res.json(users);
-})
 
-app.get("/home", checkUser, (req, res) => {
-  const books = JSON.parse(fs.readFileSync(path.join(__dirname, "books.json")));
+
+app.get("/home", checkUser, async (req, res) => {
+  const db = await connectDB();
+  const books = await db.collection("books").find().toArray();
+  const client = await db.collection("clients").findOne({ Username: req.session.user });
+
+  const borrowedIDByUser = client.IDBooksBorrowed || [];
+
+  const borrowedBooks = books.filter(book => borrowedIDByUser.includes(book._id));
+
   const booksAvailable = books.filter(book => book.available);
-  const borrowedBooks = books.filter(book => !book.available && req.session.borrowedBooks.includes(book.title)
-  );
+
 
   res.render("home", {
     user: req.session.user,
@@ -136,3 +130,16 @@ app.get("/signout", (req, res) => {
 app.listen(HTTP_PORT, () => {
   console.log(`Listening on port ${HTTP_PORT}`);
 });
+
+/*mongodb testing
+app.get('/books', async (req, res) => {
+  const db = await connectDB();
+  const books = await db.collection('books').find().toArray();
+  res.json(books);
+});
+app.get('/users', async (req, res) => {
+  const db = await connectDB();
+  const users = await db.collection('users').find().toArray();
+  res.json(users);
+}) */
+
