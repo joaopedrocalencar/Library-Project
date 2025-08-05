@@ -5,8 +5,9 @@ const path = require("path");
 const session = require('express-session');
 const randomstring = require("randomstring");
 const connectDB = require('./db');
-const RedisStore = require("connect-redis").default;
+const RedisStore = require("connect-redis").RedisStore;
 const Redis = require("ioredis");
+const borrowReturnRoutes = require("./borrowReturn")
 
 
 
@@ -15,12 +16,15 @@ const HTTP_PORT = process.env.PORT || 3000;
 
 const app = express();
 
+borrowReturnRoutes(app, checkUser);
+
 const sessionSecret = process.env.SESSION_SECRET || (() => {
   randomstring.generate();
   console.log("Couldn't connect to redis, using randomstring generator for session secret");
 })();
 
 redisClient = new Redis(process.env.REDIS_URL);
+
 const redisStore = new RedisStore({
   client: redisClient,
   prefix: "redisLibrary",
@@ -121,78 +125,6 @@ app.get("/home", checkUser, (req, res) => {
   });
 
 });
-
-app.post("/borrow", checkUser, (req, res) => {
-  const selectedBooks = req.body.books;
-  if (!selectedBooks) return res.redirect("/home");
-
-  const booksPath = path.join(__dirname, "books.json");
-  const usersPath = path.join(__dirname, "users.json");
-
-  const books = JSON.parse(fs.readFileSync(booksPath));
-  const users = JSON.parse(fs.readFileSync(usersPath));
-  const username = req.session.user;
-
-  const selected = Array.isArray(selectedBooks) ? selectedBooks : [selectedBooks];
-
-  // Ensure user has a borrowedBooks array
-  if (!Array.isArray(users[username].borrowedBooks)) {
-    users[username].borrowedBooks = [];
-  }
-
-  const updatedBooks = books.map(book => {
-    if (selected.includes(book.title) && book.available) {
-      book.available = false;
-      if (!users[username].borrowedBooks.includes(book.title)) {
-        users[username].borrowedBooks.push(book.title);
-      }
-    }
-    return book;
-  });
-
-  req.session.borrowedBooks = users[username].borrowedBooks;
-  fs.writeFileSync(booksPath, JSON.stringify(updatedBooks, null, 2));
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-  res.redirect("/home");
-});
-
-
-app.post("/return", checkUser, (req, res) => {
-  const selectedBooks = req.body.books;
-  if (!selectedBooks) return res.redirect("/home");
-
-  const booksPath = path.join(__dirname, "books.json");
-  const usersPath = path.join(__dirname, "users.json");
-
-  const books = JSON.parse(fs.readFileSync(booksPath));
-  const users = JSON.parse(fs.readFileSync(usersPath));
-  const username = req.session.user;
-
-  const selected = Array.isArray(selectedBooks) ? selectedBooks : [selectedBooks];
-
-  if (!Array.isArray(users[username].borrowedBooks)) {
-    users[username].borrowedBooks = [];
-  }
-
-  const updatedBooks = books.map(book => {
-    if (selected.includes(book.title)) {
-      book.available = true;
-      users[username].borrowedBooks = users[username].borrowedBooks.filter(
-        title => title !== book.title
-      );
-    }
-    return book;
-  });
-
-  req.session.borrowedBooks = users[username].borrowedBooks;
-  fs.writeFileSync(booksPath, JSON.stringify(updatedBooks, null, 2));
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-  res.redirect("/home");
-});
-
-
 
 
 app.get("/signout", (req, res) => {
