@@ -131,9 +131,10 @@ app.get("/signout", (req, res) => {
   })
 });
 
-app.listen(HTTP_PORT, () => {
-  console.log(`Listening on port ${HTTP_PORT}`);
-});
+//app.listen(HTTP_PORT, () => {
+//  console.log(`Listening on port ${HTTP_PORT}`);
+//});
 
 
+module.exports = app;
 
