@@ -78,7 +78,7 @@ app.get("/signin", (req, res) => {
 app.post("/signin", async (req, res) => {
   const { username, password } = req.body;
 
-  const usersPath = path.join(__dirname, "users.json");
+  const usersPath = path.resolve(__dirname, "users.json");
   const users = JSON.parse(fs.readFileSync(usersPath));
 
   if (!users[username]) {
