@@ -1,5 +1,16 @@
 {
     "version": 2,
+    "functions": {
+        "app.js": {
+            "includeFiles": [
+                "views/**",
+                "public/**",
+                "users.json",
+                "db.js",
+                "borrowReturn.js"
+            ]
+        }
+    },
     "builds": [
         {
             "src": "app.js",
