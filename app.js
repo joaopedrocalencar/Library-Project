@@ -5,24 +5,26 @@ const path = require("path");
 const session = require('express-session');
 const randomstring = require("randomstring");
 const connectDB = require('./db');
-const RedisStore = require("connect-redis").RedisStore;
+const RedisStore = require("connect-redis")(session);
 const Redis = require("ioredis");
 const borrowReturnRoutes = require("./borrowReturn")
 
 
 require('dotenv').config();
+
 const HTTP_PORT = process.env.PORT || 3000;
-
 const app = express();
-
-borrowReturnRoutes(app, checkUser);
-
-const sessionSecret = process.env.SESSION_SECRET || (() => {
-  randomstring.generate();
-  console.log("Couldn't connect to redis, using randomstring generator for session secret");
-})();
+const sessionSecret = process.env.SESSION_SECRET;
 
 redisClient = new Redis(process.env.REDIS_URL);
+
+redisClient.on("error", (err) => {
+  console.error("Redis Client Error:", err);
+});
+
+redisClient.on("connect", () => {
+  console.log("Connected to Redis");
+});
 
 const redisStore = new RedisStore({
   client: redisClient,
@@ -39,7 +41,7 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === "production"
   }
-}))
+}));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -62,6 +64,8 @@ function checkUser(req, res, next) {
   }
   next();
 }
+
+borrowReturnRoutes(app, checkUser);
 
 app.get("/", (req, res) => {
   res.render("landing");
@@ -86,7 +90,7 @@ app.post("/signin", async (req, res) => {
   }
 
   const db = await connectDB();
-  const client = await db.collection("clients").findOne({ username });
+  const client = await db.collection("clients").findOne({ Username: username });
 
   if (!client) {
     return res.render("signin", { error: "Email not found in database" })
@@ -114,8 +118,8 @@ app.get("/home", checkUser, async (req, res) => {
 
   res.render("home", {
     user: req.session.user,
-    availableBooks: booksAvailable.map(book => book.title),
-    borrowedBooks: borrowedBooks.map(book => book.title)
+    availableBooks: booksAvailable.map(book => ({ id: book._id, title: book.title })),
+    borrowedBooks: borrowedBooks.map(book => ({ id: book._id, title: book.title }))
   });
 
 });
@@ -131,15 +135,5 @@ app.listen(HTTP_PORT, () => {
   console.log(`Listening on port ${HTTP_PORT}`);
 });
 
-/*mongodb testing
-app.get('/books', async (req, res) => {
-  const db = await connectDB();
-  const books = await db.collection('books').find().toArray();
-  res.json(books);
-});
-app.get('/users', async (req, res) => {
-  const db = await connectDB();
-  const users = await db.collection('users').find().toArray();
-  res.json(users);
-}) */
+
 

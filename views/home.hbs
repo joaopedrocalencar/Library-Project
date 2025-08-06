@@ -11,8 +11,8 @@
       <form method="POST" action="/borrow">
         {{#each availableBooks}}
         <label>
-          <input class="borrow-checkbox" type="checkbox" name="books" value="{{this}}" />
-          {{this}}
+          <input class="borrow-checkbox" type="checkbox" name="books" value="{{id}}" />
+          {{title}}
         </label><br />
         {{/each}}
         <button id="borrow-button" type="submit" disabled>Borrow</button>
@@ -24,19 +24,19 @@
       <form method="POST" action="/return">
         {{#each borrowedBooks}}
         <label>
-          <input class="return-checkbox" type="checkbox" name="books" value="{{this}}" />
-          {{this}}
+          <input class="return-checkbox" type="checkbox" name="books" value="{{id}}" />
+          {{title}}
         </label><br />
         {{/each}}
         <button id="return-button" type="submit" disabled>Return</button>
       </form>
     </div>
     <div class="user-info">
-      <p>Username: <strong> {{user}}</strong></p>
+      <p>Username: <strong>{{user}}</strong></p>
     </div>
-
   </div>
 </div>
+
 <script>
   const borrowCheckboxes = document.querySelectorAll('.borrow-checkbox');
   const returnCheckboxes = document.querySelectorAll('.return-checkbox');
