@@ -132,10 +132,12 @@ app.get("/signout", (req, res) => {
 });
 
 
+/*
 if (process.env.NODE_ENV !== 'production') {
   app.listen(HTTP_PORT, () => {
     console.log(`Listening on port ${HTTP_PORT}`);
   });
 }
+*/
 
 module.exports = app;
